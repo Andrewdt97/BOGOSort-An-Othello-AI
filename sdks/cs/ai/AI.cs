@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq.JArray;
 using System;
 using System.Collections.Generic;
 
@@ -5,11 +6,13 @@ namespace ai
 {
     public static class AI
     {
-        enum Player { us=1, them}; //TODO: Make sure player is right
+        enum Player { us=1, other}; //TODO: Make sure player is right
+        private static int us;
+
         public static int[] NextMove(GameMessage gameMessage)
         {
             int[][] board = gameMessage.board;
-            int player = gameMessage.player;
+            us = gameMessage.player;
             int time = gameMessage.maxTurnTime;
 
 
@@ -20,23 +23,23 @@ namespace ai
             return nextMove;
         }
       
-        private static MoveResult MiniMax( int[][] boardState, int depth, float alpha, float beta ) //TODO: POTENTIALLY STOPWATCH
+        private int[] MiniMax( int[][] boardState, int depth, int alpha, int beta ) //TODO: POTENTIALLY STOPWATCH
         {
             if ( depth == 0 ) { //TODO: Add isGameOver
                 return new MoveResult( new int[] {0, 0}, Evaluate( boardState ) );
             }
 
             int[] moveToMake = new int[2];
-            float bestEval;
+            int bestEval;
             bool isMyMove = true;
 
             if ( isMyMove ) {   // Max
                 bestEval = int.MinValue;
-                List<int[]> possibleMoves = GetPossibleMoves( boardState, (int)Player.us );
+                List<int[]> possibleMoves = GetPossibleMoves( boardState, us );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
                     int[][] newBoard = MakeMove( boardState, possibleMove);
-                    float newEval = MiniMax( newBoard, depth - 1, alpha, beta ).eval;
+                    int newEval = MiniMax( newBoard, depth - 1, alpha, beta );
 
                     if ( newEval > bestEval ) {
                         bestEval = newEval;
@@ -50,7 +53,7 @@ namespace ai
             }
             else {              // Min
                 bestEval = int.MaxValue;
-                List<int[]> possibleMoves = GetPossibleMoves( boardState, (int)Player.them );
+                List<int[]> possibleMoves = GetPossibleMoves( boardState, Player.other );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
                     int[][] newBoard = MakeMove( boardState, possibleMove);
@@ -171,7 +174,7 @@ namespace ai
             return peiceDiff + movesToMake + cornersDiff;
         }
 
-        private static float GetPeiceDiff( int[][] boardState, int us ) {
+        private float GetPeiceDiff( int[][] boardState, int us ) {
             int them = (us == 1) ? 2 : 1;
             float difference = 0.0f;
             for ( int row = 0; row < boardState.Length; row++ ) {
@@ -186,37 +189,37 @@ namespace ai
             return difference;
         }
 
-        private static float GetCorners( int[][] boardState, int us) {
+        private float GetCorners( int[][] boardState, int us) {
             int them = (us == 1) ? 2 : 1;
-            float difference = 0.0f;
+            float difference = 0.0;
             switch ( boardState[0][0] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10;
+                case them: difference -= 10;
             }
 
             switch ( boardState[0][7] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10;
+                case them: difference -= 10;
             }
 
             switch ( boardState[7][0] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10;
+                case them: difference -= 10;
             }
 
             switch ( boardState[7][7] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10;
+                case them: difference -= 10;
             }
 
             return difference;
         }
 
-        private static bool CheckForThreshold( int[][] boardState, int thresh ) {
+        private bool CheckForThreshold( int[][] boardState, int thresh ) {
             int freeSpaces = 64;
             bool result = false;
 
@@ -234,9 +237,9 @@ namespace ai
       
         public class MoveResult {
             public int[] move;
-            public float eval;
+            public int eval;
 
-            public MoveResult(int[] moveArr, float moveEval) {
+            public MoveResult(int[] moveArr, int moveEval) {
                 move = moveArr;
                 eval = moveEval;
             }
