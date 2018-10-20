@@ -9,62 +9,42 @@ namespace ai
 
         public static int[] NextMove(GameMessage gameMessage)
         {
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
             int[][] board = gameMessage.board;
             us = gameMessage.player;
             int time = gameMessage.maxTurnTime;
 
+            int depth = 4;
 
-            int depth = 4; //TODO: Add looping depth
+            int[] nextMove = null;
+            float score = float.MinValue;
 
-            Console.WriteLine("Before");
-
-            foreach (int[] i in board)
+            do
             {
-                foreach (int j in i)
+                Console.WriteLine($"Runnig at depth {depth}");
+                MoveResult result = MiniMax(board, depth, float.MinValue, float.MaxValue, us, ref sw, ref time);
+                if (result.eval > score && sw.ElapsedMilliseconds < (time - 500))
                 {
-                    Console.Write($"[{j}] ");
+                    score = result.eval;
+                    nextMove = result.move;
                 }
-                Console.WriteLine();
-
-            }
-            Console.WriteLine();
-
-            int[] nextMove = MiniMax(board, depth, float.MinValue, float.MaxValue, us ).move;
-
-            Console.WriteLine($"The board is like this, and available moves are :");
-
-            List<int[]> possibleMoves = GetPossibleMoves(board, us);
-            foreach (int[] move in possibleMoves)
-            {
-                Console.WriteLine($"Move available: {move[0]}, {move[1]}");
-
-            }
-
-            Console.WriteLine("After");
-
-            foreach (int[] i in board)
-            {
-                foreach (int j in i)
-                {
-                    Console.Write($"[{j}] ");
-                }
-                Console.WriteLine();
-
-            }
-            Console.WriteLine();
+                depth++;
+            } while (sw.ElapsedMilliseconds < (time - 500));
 
             return nextMove;
         }
       
-        private static MoveResult MiniMax( int[][] boardState, int depth, float alpha, float beta, int player ) //TODO: POTENTIALLY STOPWATCH
+        private static MoveResult MiniMax( int[][] boardState, int depth, float alpha, float beta, int player, ref System.Diagnostics.Stopwatch sw, ref int time)
         {
             int them = (us == 1) ? 2 : 1;
 
             if (CheckForThreshold(boardState, 1))
             {
-                return new MoveResult(new int[] { 9, 9 }, EvaluateEndGame(boardState));
+                return new MoveResult(new int[] { 0, 0 }, EvaluateEndGame(boardState));
             }
-            if ( depth == 0 ) { //TODO: Add isGameOver
+            if ( depth == 0 ) {
                 return new MoveResult( new int[] {0, 0}, Evaluate( boardState ) );
             }
 
@@ -76,7 +56,7 @@ namespace ai
 
             if (noMovesFound)
             {
-                Console.WriteLine("No moves found.");
+                return new MoveResult(new int[] { 0, 0 }, Evaluate(boardState));
             }
 
             float bestEval;
@@ -85,10 +65,15 @@ namespace ai
                 bestEval = float.MinValue;
 
                 foreach ( int[] possibleMove in possibleMoves ) {
+                    if (sw.ElapsedMilliseconds  >= (time - 500) )
+                    {
+                        return new MoveResult(new int[] { 0, 0 }, float.MinValue);
+                    }
+
                     int[][] newBoard = CloneBoard(boardState);
                     MakeMove( newBoard, possibleMove, player);
                     float newEval = MiniMax( newBoard, depth - 1, alpha, beta,
-                        (player == 1) ? 2 : 1).eval;
+                        (player == 1) ? 2 : 1, ref sw, ref time).eval;
 
                     if ( newEval > bestEval ) {
                         bestEval = newEval;
@@ -98,16 +83,20 @@ namespace ai
                     alpha = Math.Max(alpha, bestEval);
                     if (beta <= alpha) { break; }
                 }
-                return new MoveResult( moveToMake, bestEval );
             }
             else {              // Min
                 bestEval = float.MaxValue;
 
                 foreach ( int[] possibleMove in possibleMoves ) {
+                    if (sw.ElapsedMilliseconds >= (time - 500) )
+                    {
+                        return new MoveResult(new int[] { 0, 0 }, float.MaxValue);
+                    }
+
                     int[][] newBoard = CloneBoard(boardState);
                     MakeMove(newBoard, possibleMove, them);
                     float newEval = MiniMax( newBoard, depth - 1, alpha, beta, 
-                        (player == 1) ? 2 : 1).eval;
+                        (player == 1) ? 2 : 1, ref sw, ref time).eval;
 
                     if ( newEval < bestEval ) {
                         bestEval = newEval;
@@ -117,8 +106,14 @@ namespace ai
                     beta = Math.Min(beta, bestEval);
                     if (beta <= alpha) { break; }
                 }
-                return new MoveResult( moveToMake, bestEval );
             }
+
+            if (moveToMake[0] != 9)
+            {
+                return new MoveResult(moveToMake, bestEval);
+            }
+
+            return new MoveResult (possibleMoves[0], Evaluate(boardState));
         }
       
       public static List<int[]> GetPossibleMoves( int[][] board, int player )
@@ -268,7 +263,7 @@ namespace ai
 
         private static float EvaluateEndGame( int[][] boardState )
         {
-            float peiceDiff = GetPeiceDiff(boardState, us);
+            float peiceDiff = GetPeiceDiff(boardState, us) * 128;
             return peiceDiff;
         }
 
