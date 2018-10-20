@@ -5,7 +5,8 @@ namespace ai
 {
     public static class AI
     {
-        enum Player { us=1, them}; //TODO: Make sure player is right
+        private static int us;
+
         public static int[] NextMove(GameMessage gameMessage)
         {
             int[][] board = gameMessage.board;
@@ -22,6 +23,8 @@ namespace ai
       
         private static MoveResult MiniMax( int[][] boardState, int depth, float alpha, float beta ) //TODO: POTENTIALLY STOPWATCH
         {
+            int them = (us == 1) ? 2 : 1;
+
             if ( depth == 0 ) { //TODO: Add isGameOver
                 return new MoveResult( new int[] {0, 0}, Evaluate( boardState ) );
             }
@@ -32,7 +35,7 @@ namespace ai
 
             if ( isMyMove ) {   // Max
                 bestEval = int.MinValue;
-                List<int[]> possibleMoves = GetPossibleMoves( boardState, (int)Player.us );
+                List<int[]> possibleMoves = GetPossibleMoves( boardState, us );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
                     int[][] newBoard = MakeMove( boardState, possibleMove);
@@ -50,7 +53,7 @@ namespace ai
             }
             else {              // Min
                 bestEval = int.MaxValue;
-                List<int[]> possibleMoves = GetPossibleMoves( boardState, (int)Player.them );
+                List<int[]> possibleMoves = GetPossibleMoves( boardState, them );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
                     int[][] newBoard = MakeMove( boardState, possibleMove);
@@ -91,8 +94,6 @@ namespace ai
                                     int newY = yPos + deltaY;
                                     int newX = xPos + deltaX;
 
-                                    Console.WriteLine( newY + ", " + newX );
-
                                     // While the position is on the board and is an enemy tile
                                     while ( newY >= 0 && newY < board[yPos].Length
                                         && newX >= 0 && newX < board[xPos].Length
@@ -119,11 +120,11 @@ namespace ai
             return allMoves;
         }
 
-        public static int[][] MoveResult( int[][] board, int[] move )
+        public static int[][] MakeMove( int[][] board, int[] move )
         {
             int[][] newBoard = (int[][])board.Clone();
 
-            int enemy = (us == 1) ? 2 : 1 ;
+            int enemy = ( us == 1 ) ? 2 : 1 ;
 
             int startY = move[0];
             int startX = move[1];
@@ -131,43 +132,50 @@ namespace ai
             newBoard[startY][startX] = us;
 
             // Check for matches in all directions
-            for (int deltaY = -1; deltaY < 2; deltaY++)
+            List<int[]> flips = new List<int[]>();
+
+            for ( int deltaY = -1; deltaY < 2; deltaY++ )
             {
-                for (int deltaX = -1; deltaX < 2; deltaX++)
+                for ( int deltaX = -1; deltaX < 2; deltaX++ )
                 {
-                    if (deltaX != 0 || deltaY != 0)
+                    if ( deltaX != 0 || deltaY != 0)
                     {
+                        List<int[]> tempFlips = new List<int[]>();
+
                         int newY = startY + deltaY;
                         int newX = startX + deltaX;
 
-                        Console.WriteLine(newY + ", " + newX);
-
                         // While the position is on the board and is an enemy tile
-                        while (newY >= 0 && newY < board[startY].Length
-                            && newX >= 0 && newX < board[startX].Length
-                            && board[newY][newX] == enemy)
+                        while ( newY >= 0 && newY < newBoard[startY].Length
+                            && newX >= 0 && newX < newBoard[startX].Length
+                            && newBoard[newY][newX] == enemy )
                         {
+                            tempFlips.Add( new int[] { newY, newX } );
                             newY += deltaY;
                             newX += deltaX;
                         }
 
-                        if (board[newY][newX] == 0)
+                        if (newBoard[newY][newX] == us)
                         {
-                            int[] move = new int[] { newY, newX };
-                            if (!allMoves.Contains(move))
-                            {
-                                allMoves.Add(move);
-                            }
+                            flips.AddRange( tempFlips );
                         }
                     }
                 }
             }
+
+            foreach ( int[] flip in flips )
+            {
+                int value = newBoard[flip[0]][flip[1]];
+                newBoard[flip[0]][flip[1]] = (value == 1) ? 2 : 1 ;
+            }
+
+            return newBoard;
         }
 
         private static float Evaluate( int[][] boardState ) {
-            float peiceDiff = GetPeiceDiff( boardState, (int)Player.us ) / 100 ;
-            float movesToMake = (float)GetPossibleMoves( boardState, (int)Player.us ).Count;
-            float cornersDiff = GetCorners( boardState, (int)Player.us );
+            float peiceDiff = GetPeiceDiff( boardState, us ) / 100 ;
+            float movesToMake = (float)GetPossibleMoves( boardState, us ).Count;
+            float cornersDiff = GetCorners( boardState, us );
             return peiceDiff + movesToMake + cornersDiff;
         }
 
@@ -177,8 +185,8 @@ namespace ai
             for ( int row = 0; row < boardState.Length; row++ ) {
                 for ( int column = 0; column < boardState[row].Length; column++ ) {
                     switch ( boardState[row][column] ) {
-                        case (int)Player.us: difference++; break;
-                        case (int)Player.them: difference--; break;
+                        case us: difference++; break;
+                        case them: difference--; break;
                         default: break;
                     }
                 }
@@ -191,26 +199,26 @@ namespace ai
             float difference = 0.0f;
             switch ( boardState[0][0] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10; break;
+                case them: difference -= 10; break;
             }
 
             switch ( boardState[0][7] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10; break;
+                case them: difference -= 10; break;
             }
 
             switch ( boardState[7][0] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10; break;
+                case them: difference -= 10; break;
             }
 
             switch ( boardState[7][7] ) {
                 case 0: break;
-                case (int)Player.us: difference += 10; break;
-                case (int)Player.them: difference -= 10; break;
+                case us: difference += 10; break;
+                case them: difference -= 10; break;
             }
 
             return difference;
