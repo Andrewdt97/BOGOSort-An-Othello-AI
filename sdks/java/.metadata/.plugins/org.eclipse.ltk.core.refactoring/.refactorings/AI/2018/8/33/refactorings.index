@@ -1,0 +1,4 @@
+1534262477515	Rename package 'com.atomicobject.rts'
+1534262497360	Delete element
+1534264230772	Rename method 'processUpdateFromServer'
+1534264242108	Rename method 'sendCommandListToServer'
