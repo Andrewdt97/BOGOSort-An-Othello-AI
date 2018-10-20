@@ -29,39 +29,26 @@ namespace test
         public void FindMoves()
         {
             const string input = @"{""board"":[
-[0,0,0,0,0,0,0,0],
-[0,0,0,0,0,2,0,0],
-[0,0,1,0,1,2,0,0],
-[0,0,0,1,1,2,0,0],
-[0,0,1,2,1,2,0,0],
-[0,0,2,0,0,0,0,0],
-[0,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0]],""maxTurnTime"":15000,""player"":2}";
+                [0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0],
+                [0,0,0,1,2,0,0,0],
+                [0,0,0,2,1,0,0,0],
+                [0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0]],""maxTurnTime"":15000,""player"":2}";
             var obj = JsonConvert.DeserializeObject<GameMessage>(input);
 
             List<int[]> moves = AI.GetPossibleMoves(obj.board, obj.player);
 
             foreach (int[] move in moves)
             {
-                Console.WriteLine("Move: " + move[0] + ", " + move[1]);
+                moves.Count.Shoul().Be(4);
+                moves.Exists(f => AI.CompareMoves(f, new int[] { 2, 3 })).Should.Be(true);
+                moves.Exists(f => AI.CompareMoves(f, new int[] { 3, 2 })).Should.Be(true);
+                moves.Exists(f => AI.CompareMoves(f, new int[] { 5, 4 })).Should.Be(true);
+                moves.Exists(f => AI.CompareMoves(f, new int[] { 4, 5 })).Should.Be(true);
             }
         }
-
-//        [Fact]
-//        public void MakeMove()
-//        {
-//            const string input = @"{""board"":[
-//[0,0,0,0,0,0,0,0],
-//[0,0,0,0,0,2,0,0],
-//[0,0,1,0,1,2,0,0],
-//[0,0,0,1,1,2,0,0],
-//[0,0,1,2,1,2,0,0],
-//[0,0,2,0,0,0,0,0],
-//[0,0,0,0,0,0,0,0],
-//[0,0,0,0,0,0,0,0]],""maxTurnTime"":15000,""player"":2}";
-//            var obj = JsonConvert.DeserializeObject<GameMessage>(input);
-//            AI.MakeMove(obj.board);
-//        }
-
     }
 }
