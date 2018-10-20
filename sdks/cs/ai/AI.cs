@@ -14,9 +14,44 @@ namespace ai
             int time = gameMessage.maxTurnTime;
 
 
-            int depth = 8; //TODO: Add looping depth
+            int depth = 4; //TODO: Add looping depth
+
+            Console.WriteLine("Before");
+
+            foreach (int[] i in board)
+            {
+                foreach (int j in i)
+                {
+                    Console.Write($"[{j}] ");
+                }
+                Console.WriteLine();
+
+            }
+            Console.WriteLine();
 
             int[] nextMove = MiniMax(board, depth, float.MinValue, float.MaxValue, us ).move;
+
+            Console.WriteLine($"The board is like this, and available moves are :");
+
+            List<int[]> possibleMoves = GetPossibleMoves(board, us);
+            foreach (int[] move in possibleMoves)
+            {
+                Console.WriteLine($"Move available: {move[0]}, {move[1]}");
+
+            }
+
+            Console.WriteLine("After");
+
+            foreach (int[] i in board)
+            {
+                foreach (int j in i)
+                {
+                    Console.Write($"[{j}] ");
+                }
+                Console.WriteLine();
+
+            }
+            Console.WriteLine();
 
             return nextMove;
         }
@@ -41,14 +76,7 @@ namespace ai
 
             if (noMovesFound)
             {
-                foreach (int[] i in boardState)
-                {
-                    foreach (int j in i)
-                    {
-                        Console.Write($"[{j}] ");
-                    }
-                    Console.WriteLine();
-                }
+                Console.WriteLine("No moves found.");
             }
 
             float bestEval;
@@ -57,7 +85,8 @@ namespace ai
                 bestEval = float.MinValue;
 
                 foreach ( int[] possibleMove in possibleMoves ) {
-                    int[][] newBoard = MakeMove( boardState, possibleMove, player);
+                    int[][] newBoard = CloneBoard(boardState);
+                    MakeMove( newBoard, possibleMove, player);
                     float newEval = MiniMax( newBoard, depth - 1, alpha, beta,
                         (player == 1) ? 2 : 1).eval;
 
@@ -66,8 +95,8 @@ namespace ai
                         moveToMake = possibleMove;
                     }
 
-                    alpha = Math.Max( alpha, bestEval );
-                    if ( beta <= alpha) { break; }
+                    alpha = Math.Max(alpha, bestEval);
+                    if (beta <= alpha) { break; }
                 }
                 return new MoveResult( moveToMake, bestEval );
             }
@@ -75,7 +104,8 @@ namespace ai
                 bestEval = float.MaxValue;
 
                 foreach ( int[] possibleMove in possibleMoves ) {
-                    int[][] newBoard = MakeMove( boardState, possibleMove, them);
+                    int[][] newBoard = CloneBoard(boardState);
+                    MakeMove(newBoard, possibleMove, them);
                     float newEval = MiniMax( newBoard, depth - 1, alpha, beta, 
                         (player == 1) ? 2 : 1).eval;
 
@@ -84,8 +114,8 @@ namespace ai
                         moveToMake = possibleMove;
                     }
 
-                    beta = Math.Min( beta, bestEval );
-                    if ( beta <= alpha) { break; }
+                    beta = Math.Min(beta, bestEval);
+                    if (beta <= alpha) { break; }
                 }
                 return new MoveResult( moveToMake, bestEval );
             }
@@ -147,6 +177,21 @@ namespace ai
             return allMoves;
         }
 
+        private static int[][] CloneBoard(int[][] original)
+        {
+            int[][] ret = new int[8][];
+            for (int r = 0; r < 8; r++)
+            {
+                ret[r] = new int[8];
+                for (int c = 0; c < 8; c++)
+                {
+                    ret[r][c] = original[r][c];
+                }
+            }
+
+            return ret;
+        }
+
         private static bool CompareMoves(int[] a1, int[] a2)
         {
             bool result = false;
@@ -160,14 +205,12 @@ namespace ai
 
         public static int[][] MakeMove( int[][] board, int[] move, int player )
         {
-            int[][] newBoard = (int[][])board.Clone();
-
             int enemy = ( player == 1 ) ? 2 : 1 ;
 
             int startY = move[0];
             int startX = move[1];
 
-            newBoard[startY][startX] = player;
+            board[startY][startX] = player;
 
             // Check for matches in all directions
             List<int[]> flips = new List<int[]>();
@@ -186,9 +229,9 @@ namespace ai
                         bool foundEnemy = false;
 
                         // While the position is on the board and is an enemy tile
-                        while ( newY >= 0 && newY < newBoard[startY].Length
-                            && newX >= 0 && newX < newBoard[startX].Length
-                            && newBoard[newY][newX] == enemy )
+                        while ( newY >= 0 && newY < board[startY].Length
+                            && newX >= 0 && newX < board[startX].Length
+                            && board[newY][newX] == enemy )
                         {
                             foundEnemy = true;
                             tempFlips.Add( new int[] { newY, newX } );
@@ -197,9 +240,9 @@ namespace ai
                         }
 
                         if ( foundEnemy 
-                            && newY >= 0 && newY < newBoard[startY].Length
-                            && newX >= 0 && newX < newBoard[startX].Length
-                            && newBoard[newY][newX] == player)
+                            && newY >= 0 && newY < board[startY].Length
+                            && newX >= 0 && newX < board[startX].Length
+                            && board[newY][newX] == player)
                         {
                             flips.AddRange( tempFlips );
                         }
@@ -209,11 +252,11 @@ namespace ai
 
             foreach ( int[] flip in flips )
             {
-                int value = newBoard[flip[0]][flip[1]];
-                newBoard[flip[0]][flip[1]] = (value == 1) ? 2 : 1 ;
+                int value = board[flip[0]][flip[1]];
+                board[flip[0]][flip[1]] = (value == 1) ? 2 : 1 ;
             }
 
-            return newBoard;
+            return board;
         }
 
         private static float Evaluate( int[][] boardState ) {
