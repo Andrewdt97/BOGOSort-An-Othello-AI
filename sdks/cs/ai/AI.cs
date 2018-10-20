@@ -46,7 +46,7 @@ namespace ai
                 List<int[]> possibleMoves = GetPossibleMoves( boardState, Player.other );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
-                    int[][] newBoard = MakeMove( boardState, possibleMove);
+                    int[][] newBoard = MakeMove( boardState, possibleMove );
                     int newEval = MiniMax( newBoard, depth - 1, alpha, beta );
 
                     if ( newEval < bestEval ) {
@@ -111,6 +111,23 @@ namespace ai
             }
 
             return difference;
+        }
+
+        private bool CheckForThreshold( int[][] boardState, int thresh ) {
+            int freeSpaces = 64;
+            bool result = false;
+
+            for ( int column = 0; column < boardState.Length; column++ ) {
+                for ( int row = 0; row < boardState[column].Length; row++ ) {
+                    if ( freeSpaces < thresh ) { 
+                        result = true;
+                        break; }
+                    if ( boardState[column][row] != 0 ) { freeSpaces--; }
+                }
+                if ( result ) { break; }
+            }
+
+            return result;
         }
         public class MoveResult {
             public int[] move;
