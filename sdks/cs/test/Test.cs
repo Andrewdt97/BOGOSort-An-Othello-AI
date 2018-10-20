@@ -28,7 +28,15 @@ namespace test
         [Fact]
         public void FindMoves()
         {
-            const string input = @"{""board"":[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,1,1,0,0,0],[0,0,0,2,1,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]],""maxTurnTime"":15000,""player"":2}";
+            const string input = @"{""board"":[
+[0,0,0,0,0,0,0,0],
+[0,0,0,0,0,2,0,0],
+[0,0,1,0,1,2,0,0],
+[0,0,0,1,1,2,0,0],
+[0,0,1,2,1,2,0,0],
+[0,0,2,0,0,0,0,0],
+[0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0]],""maxTurnTime"":15000,""player"":2}";
             var obj = JsonConvert.DeserializeObject<GameMessage>(input);
 
             List<int[]> moves = AI.GetPossibleMoves(obj.board, obj.player);
@@ -38,6 +46,22 @@ namespace test
                 Console.WriteLine("Move: " + move[0] + ", " + move[1]);
             }
         }
+
+//        [Fact]
+//        public void MakeMove()
+//        {
+//            const string input = @"{""board"":[
+//[0,0,0,0,0,0,0,0],
+//[0,0,0,0,0,2,0,0],
+//[0,0,1,0,1,2,0,0],
+//[0,0,0,1,1,2,0,0],
+//[0,0,1,2,1,2,0,0],
+//[0,0,2,0,0,0,0,0],
+//[0,0,0,0,0,0,0,0],
+//[0,0,0,0,0,0,0,0]],""maxTurnTime"":15000,""player"":2}";
+//            var obj = JsonConvert.DeserializeObject<GameMessage>(input);
+//            AI.MakeMove(obj.board);
+//        }
 
     }
 }

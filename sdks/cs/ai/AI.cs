@@ -14,32 +14,52 @@ namespace ai
             int time = gameMessage.maxTurnTime;
 
 
-            int depth = 5; //TODO: Add looping depth
+            int depth = 8; //TODO: Add looping depth
 
-            int[] nextMove = MiniMax(board, depth, float.MinValue, float.MaxValue ).move;
+            int[] nextMove = MiniMax(board, depth, float.MinValue, float.MaxValue, us ).move;
 
             return nextMove;
         }
       
-        private static MoveResult MiniMax( int[][] boardState, int depth, float alpha, float beta ) //TODO: POTENTIALLY STOPWATCH
+        private static MoveResult MiniMax( int[][] boardState, int depth, float alpha, float beta, int player ) //TODO: POTENTIALLY STOPWATCH
         {
             int them = (us == 1) ? 2 : 1;
 
+            if (CheckForThreshold(boardState, 1))
+            {
+                return new MoveResult(new int[] { 9, 9 }, EvaluateEndGame(boardState));
+            }
             if ( depth == 0 ) { //TODO: Add isGameOver
                 return new MoveResult( new int[] {0, 0}, Evaluate( boardState ) );
             }
 
-            int[] moveToMake = new int[2];
-            float bestEval;
-            bool isMyMove = true;
+            int[] moveToMake = new int[] { 9, 9 };
 
-            if ( isMyMove ) {   // Max
+            List<int[]> possibleMoves = GetPossibleMoves(boardState, player);
+
+            bool noMovesFound = possibleMoves.Count == 0;
+
+            if (noMovesFound)
+            {
+                foreach (int[] i in boardState)
+                {
+                    foreach (int j in i)
+                    {
+                        Console.Write($"[{j}] ");
+                    }
+                    Console.WriteLine();
+                }
+            }
+
+            float bestEval;
+
+            if ( player == us ) {   // Max
                 bestEval = float.MinValue;
-                List<int[]> possibleMoves = GetPossibleMoves( boardState, us );
-                
-                foreach( int[] possibleMove in possibleMoves ) {
-                    int[][] newBoard = MakeMove( boardState, possibleMove);
-                    float newEval = MiniMax( newBoard, depth - 1, alpha, beta ).eval;
+
+                foreach ( int[] possibleMove in possibleMoves ) {
+                    int[][] newBoard = MakeMove( boardState, possibleMove, player);
+                    float newEval = MiniMax( newBoard, depth - 1, alpha, beta,
+                        (player == 1) ? 2 : 1).eval;
 
                     if ( newEval > bestEval ) {
                         bestEval = newEval;
@@ -54,11 +74,10 @@ namespace ai
             else {              // Min
                 bestEval = float.MaxValue;
 
-                List<int[]> possibleMoves = GetPossibleMoves( boardState, them );
-                
-                foreach( int[] possibleMove in possibleMoves ) {
-                    int[][] newBoard = MakeMove( boardState, possibleMove);
-                    float newEval = MiniMax( newBoard, depth - 1, alpha, beta ).eval;
+                foreach ( int[] possibleMove in possibleMoves ) {
+                    int[][] newBoard = MakeMove( boardState, possibleMove, them);
+                    float newEval = MiniMax( newBoard, depth - 1, alpha, beta, 
+                        (player == 1) ? 2 : 1).eval;
 
                     if ( newEval < bestEval ) {
                         bestEval = newEval;
@@ -86,6 +105,7 @@ namespace ai
                     // If the cell contains one of our pieces, look for chains
                     if ( board[yPos][xPos] == player )
                     {
+                        //Console.WriteLine($"Start: {xPos}, {yPos}");
                         for ( int deltaY = -1; deltaY < 2; deltaY++ )
                         {
                             for ( int deltaX = -1; deltaX < 2; deltaX++ )
@@ -95,6 +115,7 @@ namespace ai
                                     int newY = yPos + deltaY;
                                     int newX = xPos + deltaX;
 
+                                    bool foundEnemy = false;
                                     // While the position is on the board and is an enemy tile
                                     while ( newY >= 0 && newY < board[yPos].Length
                                         && newX >= 0 && newX < board[xPos].Length
@@ -102,13 +123,18 @@ namespace ai
                                     {
                                         newY += deltaY;
                                         newX += deltaX;
+                                        foundEnemy = true;
                                     }
 
-                                    if ( board[newY][newX] == 0 )
+                                    if (foundEnemy
+                                        && newY >= 0 && newY < board[yPos].Length
+                                        && newX >= 0 && newX < board[xPos].Length
+                                        && board[newY][newX] == 0 )
                                     {
                                         int[] move = new int[] { newY, newX };
-                                        if ( !allMoves.Contains( move ) )
+                                        if ( !allMoves.Exists( x => CompareMoves(x, move) ) )
                                         {
+                                            //Console.WriteLine($"StartX: {xPos}, Start Y:{yPos}\n{newX}, {newY}");
                                             allMoves.Add(move);
                                         }
                                     }
@@ -121,16 +147,27 @@ namespace ai
             return allMoves;
         }
 
-        public static int[][] MakeMove( int[][] board, int[] move )
+        private static bool CompareMoves(int[] a1, int[] a2)
+        {
+            bool result = false;
+            if ( a1[0] == a2[0] 
+                && a1[1] == a2[1] )
+            {
+                result = true;
+            }
+            return result;
+        }
+
+        public static int[][] MakeMove( int[][] board, int[] move, int player )
         {
             int[][] newBoard = (int[][])board.Clone();
 
-            int enemy = ( us == 1 ) ? 2 : 1 ;
+            int enemy = ( player == 1 ) ? 2 : 1 ;
 
             int startY = move[0];
             int startX = move[1];
 
-            newBoard[startY][startX] = us;
+            newBoard[startY][startX] = player;
 
             // Check for matches in all directions
             List<int[]> flips = new List<int[]>();
@@ -146,17 +183,23 @@ namespace ai
                         int newY = startY + deltaY;
                         int newX = startX + deltaX;
 
+                        bool foundEnemy = false;
+
                         // While the position is on the board and is an enemy tile
                         while ( newY >= 0 && newY < newBoard[startY].Length
                             && newX >= 0 && newX < newBoard[startX].Length
                             && newBoard[newY][newX] == enemy )
                         {
+                            foundEnemy = true;
                             tempFlips.Add( new int[] { newY, newX } );
                             newY += deltaY;
                             newX += deltaX;
                         }
 
-                        if (newBoard[newY][newX] == us)
+                        if ( foundEnemy 
+                            && newY >= 0 && newY < newBoard[startY].Length
+                            && newX >= 0 && newX < newBoard[startX].Length
+                            && newBoard[newY][newX] == player)
                         {
                             flips.AddRange( tempFlips );
                         }
@@ -180,15 +223,23 @@ namespace ai
             return peiceDiff + movesToMake + cornersDiff;
         }
 
+        private static float EvaluateEndGame( int[][] boardState )
+        {
+            float peiceDiff = GetPeiceDiff(boardState, us);
+            return peiceDiff;
+        }
+
         private static float GetPeiceDiff( int[][] boardState, int us ) {
             int them = (us == 1) ? 2 : 1;
             float difference = 0.0f;
             for ( int row = 0; row < boardState.Length; row++ ) {
                 for ( int column = 0; column < boardState[row].Length; column++ ) {
-                    switch ( boardState[row][column] ) {
-                        case us: difference++; break;
-                        case them: difference--; break;
-                        default: break;
+                    if ( boardState[row][column] == us )
+                    {
+                        difference++;
+                    } else if ( boardState[row][column] == them )
+                    {
+                        difference--;
                     }
                 }
             }
@@ -198,28 +249,40 @@ namespace ai
         private static float GetCorners( int[][] boardState, int us) {
             int them = (us == 1) ? 2 : 1;
             float difference = 0.0f;
-            switch ( boardState[0][0] ) {
-                case 0: break;
-                case us: difference += 10; break;
-                case them: difference -= 10; break;
+
+            if ( boardState[0][0] == us )
+            {
+                difference += 10;
+            } else if (boardState[0][0] == them )
+            {
+                difference -= 10;
             }
 
-            switch ( boardState[0][7] ) {
-                case 0: break;
-                case us: difference += 10; break;
-                case them: difference -= 10; break;
+            if (boardState[7][0] == us)
+            {
+                difference += 10;
+            }
+            else if (boardState[7][0] == them)
+            {
+                difference -= 10;
             }
 
-            switch ( boardState[7][0] ) {
-                case 0: break;
-                case us: difference += 10; break;
-                case them: difference -= 10; break;
+            if (boardState[0][7] == us)
+            {
+                difference += 10;
+            }
+            else if (boardState[0][7] == them)
+            {
+                difference -= 10;
             }
 
-            switch ( boardState[7][7] ) {
-                case 0: break;
-                case us: difference += 10; break;
-                case them: difference -= 10; break;
+            if (boardState[7][7] == us)
+            {
+                difference += 10;
+            }
+            else if (boardState[7][7] == them)
+            {
+                difference -= 10;
             }
 
             return difference;
@@ -231,7 +294,7 @@ namespace ai
 
             for ( int column = 0; column < boardState.Length; column++ ) {
                 for ( int row = 0; row < boardState[column].Length; row++ ) {
-                    if ( freeSpaces < thresh ) { 
+                    if ( freeSpaces == 0 ) { 
                         result = true;
                         break; }
                     if ( boardState[column][row] != 0 ) { freeSpaces--; }
