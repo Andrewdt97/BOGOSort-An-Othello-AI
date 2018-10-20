@@ -187,7 +187,7 @@ namespace ai
             return ret;
         }
 
-        private static bool CompareMoves(int[] a1, int[] a2)
+        public static bool CompareMoves(int[] a1, int[] a2)
         {
             bool result = false;
             if ( a1[0] == a2[0] 
