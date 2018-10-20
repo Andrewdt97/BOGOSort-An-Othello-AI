@@ -20,7 +20,7 @@ namespace ai
             return nextMove;
         }
 
-        private static List<int[]> GetPossibleMoves( int[][] board, int player )
+        public static List<int[]> GetPossibleMoves( int[][] board, int player )
         {
             List<int[]> allMoves = new List<int[]>();
 
