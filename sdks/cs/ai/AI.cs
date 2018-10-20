@@ -12,11 +12,10 @@ namespace ai
             int player = gameMessage.player;
             int time = gameMessage.maxTurnTime;
 
-            int[] nextMove = { 0, 0 };
 
+            int depth = 5; //TODO: Add looping depth
 
-            List<int[]> moves = GetPossibleMoves(board, player);
-
+            int[] nextMove = MiniMax(board, depth, float.MinValue, float.MaxValue ).move;
 
             return nextMove;
         }
@@ -54,7 +53,7 @@ namespace ai
                 List<int[]> possibleMoves = GetPossibleMoves( boardState, (int)Player.them );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
-                    int[][] newBoard = MakeMove( boardState, possibleMove );
+                    int[][] newBoard = MakeMove( boardState, possibleMove);
                     float newEval = MiniMax( newBoard, depth - 1, alpha, beta ).eval;
 
                     if ( newEval < bestEval ) {
@@ -120,6 +119,51 @@ namespace ai
             return allMoves;
         }
 
+        public static int[][] MoveResult( int[][] board, int[] move )
+        {
+            int[][] newBoard = (int[][])board.Clone();
+
+            int enemy = (us == 1) ? 2 : 1 ;
+
+            int startY = move[0];
+            int startX = move[1];
+
+            newBoard[startY][startX] = us;
+
+            // Check for matches in all directions
+            for (int deltaY = -1; deltaY < 2; deltaY++)
+            {
+                for (int deltaX = -1; deltaX < 2; deltaX++)
+                {
+                    if (deltaX != 0 || deltaY != 0)
+                    {
+                        int newY = startY + deltaY;
+                        int newX = startX + deltaX;
+
+                        Console.WriteLine(newY + ", " + newX);
+
+                        // While the position is on the board and is an enemy tile
+                        while (newY >= 0 && newY < board[startY].Length
+                            && newX >= 0 && newX < board[startX].Length
+                            && board[newY][newX] == enemy)
+                        {
+                            newY += deltaY;
+                            newX += deltaX;
+                        }
+
+                        if (board[newY][newX] == 0)
+                        {
+                            int[] move = new int[] { newY, newX };
+                            if (!allMoves.Contains(move))
+                            {
+                                allMoves.Add(move);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         private static float Evaluate( int[][] boardState ) {
             float peiceDiff = GetPeiceDiff( boardState, (int)Player.us ) / 100 ;
             float movesToMake = (float)GetPossibleMoves( boardState, (int)Player.us ).Count;
@@ -130,9 +174,9 @@ namespace ai
         private static float GetPeiceDiff( int[][] boardState, int us ) {
             int them = (us == 1) ? 2 : 1;
             float difference = 0.0f;
-            for ( int column = 0; column < boardState.Length; column++ ) {
-                for ( int row = 0; row < boardState[column].Length; row++ ) {
-                    switch ( boardState[column][row] ) {
+            for ( int row = 0; row < boardState.Length; row++ ) {
+                for ( int column = 0; column < boardState[row].Length; column++ ) {
+                    switch ( boardState[row][column] ) {
                         case (int)Player.us: difference++; break;
                         case (int)Player.them: difference--; break;
                         default: break;
