@@ -10,7 +10,7 @@ namespace ai
         public static int[] NextMove(GameMessage gameMessage)
         {
             int[][] board = gameMessage.board;
-            int player = gameMessage.player;
+            us = gameMessage.player;
             int time = gameMessage.maxTurnTime;
 
 
@@ -34,7 +34,7 @@ namespace ai
             bool isMyMove = true;
 
             if ( isMyMove ) {   // Max
-                bestEval = int.MinValue;
+                bestEval = float.MinValue;
                 List<int[]> possibleMoves = GetPossibleMoves( boardState, us );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
@@ -52,7 +52,8 @@ namespace ai
                 return new MoveResult( moveToMake, bestEval );
             }
             else {              // Min
-                bestEval = int.MaxValue;
+                bestEval = float.MaxValue;
+
                 List<int[]> possibleMoves = GetPossibleMoves( boardState, them );
                 
                 foreach( int[] possibleMove in possibleMoves ) {
