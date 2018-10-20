@@ -9,6 +9,7 @@ namespace test
 {
     public class Test
     {
+
         [Fact]
         public void Deserialize_Game_Message()
         {

@@ -70,42 +70,44 @@ namespace ai
             }
         }
       
-      public static List<int[]> GetPossibleMoves(int[][] board, int player)
+      public static List<int[]> GetPossibleMoves( int[][] board, int player )
         {
             List<int[]> allMoves = new List<int[]>();
 
             int ourPiece = player;
-            int enemyPiece = (player == 1) ? 2 : 1;
+            int enemyPiece = ( player == 1 ) ? 2 : 1;
 
-            for (int yPos = 0; yPos < board.Length; yPos++)
+            for ( int yPos = 0; yPos < board.Length; yPos++ )
             {
-                for (int xPos = 0; xPos < board[yPos].Length; j++)
+                for ( int xPos = 0; xPos < board[yPos].Length; xPos++ )
                 {
                     // If the cell contains one of our pieces, look for chains
-                    if (board[yPos][xPos] == player)
+                    if ( board[yPos][xPos] == player )
                     {
-                        for (int deltaY = -1; deltaY < 2; deltaY++)
+                        for ( int deltaY = -1; deltaY < 2; deltaY++ )
                         {
-                            for (int deltaX = -1; deltaX < 2; deltaX++)
+                            for ( int deltaX = -1; deltaX < 2; deltaX++ )
                             {
-                                if (deltaX != 0 && deltaY != 0)
+                                if ( deltaX != 0 || deltaY != 0 )
                                 {
                                     int newY = yPos + deltaY;
                                     int newX = xPos + deltaX;
 
+                                    Console.WriteLine( newY + ", " + newX );
+
                                     // While the position is on the board and is an enemy tile
-                                    while (newY >= 0 && newY < board[xPos].Length
+                                    while ( newY >= 0 && newY < board[yPos].Length
                                         && newX >= 0 && newX < board[xPos].Length
-                                        && board[newY][newX] == enemyPiece)
+                                        && board[newY][newX] == enemyPiece )
                                     {
-                                        newY = yPos + deltaY;
-                                        newX = xPos + deltaX;
+                                        newY += deltaY;
+                                        newX += deltaX;
                                     }
 
-                                    if (board[newY][newX] == 0)
+                                    if ( board[newY][newX] == 0 )
                                     {
                                         int[] move = new int[] { newY, newX };
-                                        if (!allMoves.Contains(move))
+                                        if ( !allMoves.Contains( move ) )
                                         {
                                             allMoves.Add(move);
                                         }
@@ -116,7 +118,6 @@ namespace ai
                     }
                 }
             }
-
             return allMoves;
         }
 
