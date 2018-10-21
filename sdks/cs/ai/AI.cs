@@ -25,13 +25,13 @@ namespace ai
             {
                 Console.WriteLine($"Runnig at depth {depth}");
                 MoveResult result = MiniMax(board, depth, float.MinValue, float.MaxValue, us, ref sw, ref time);
-                if (result.eval > score && sw.ElapsedMilliseconds < (time - 500))
+                if (result.eval > score && sw.ElapsedMilliseconds < (time - 2500))
                 {
                     score = result.eval;
                     nextMove = result.move;
                 }
                 depth++;
-            } while (sw.ElapsedMilliseconds < (time - 500));
+            } while (sw.ElapsedMilliseconds < (time - 2500));
 
             return nextMove;
         }
@@ -65,7 +65,7 @@ namespace ai
                 bestEval = float.MinValue;
 
                 foreach ( int[] possibleMove in possibleMoves ) {
-                    if (sw.ElapsedMilliseconds  >= (time - 500) )
+                    if (sw.ElapsedMilliseconds  >= (time - 2500) )
                     {
                         return new MoveResult(new int[] { 0, 0 }, float.MinValue);
                     }
@@ -88,7 +88,7 @@ namespace ai
                 bestEval = float.MaxValue;
 
                 foreach ( int[] possibleMove in possibleMoves ) {
-                    if (sw.ElapsedMilliseconds >= (time - 500) )
+                    if (sw.ElapsedMilliseconds >= (time - 2500) )
                     {
                         return new MoveResult(new int[] { 0, 0 }, float.MaxValue);
                     }
